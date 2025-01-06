@@ -1,7 +1,9 @@
 import tkinter as tk
-import threading
+import threading 
+from risposte_json import salvaRisposte, caricaRisposte
 
 
+risposteP = caricaRisposte()
 
 def creaRisposta(messaggio):
     messaggio = messaggio.lower().strip()
@@ -83,52 +85,85 @@ def creaRisposta(messaggio):
 
     elif 'ti va di' in messaggio or 'dopo'in messaggio:
       return 'ok,va bene'
-    
-    
+
+    if messaggio in risposteP:
+      
+      return risposteP[messaggio]
+    else:
+      return "mi ero distratto puoi ripetere"
+
+def salvaRisposta(chatBox,messaggio):
+  
+  chatBox.config(state = tk.NORMAL)
+  chatBox.insert(tk.END,f"{messaggio}\n\n")
+  chatBox.config(state = tk.DISABLED)
+  chatBox.yview(tk.END)
+
+def inputUser(messaggio,chatBox):
+    risposta = creaRisposta(messaggio)
+
+    chatBox.config(state = tk.NORMAL) 
+    chatBox.insert(tk.END,f"User {messaggio}\n\n")
+    chatBox.insert(tk.END,f"answer {risposta}\n\n")
+    chatBox.config(state = tk.DISABLED)
+    chatBox.yview(tk.END)
+
+    if risposta == "mi ero distratto puoi ripetere":
+      apriFinestra(messaggio,chatBox)
+      
+
+def apriFinestra(messaggio,chatBox):
+  finestra = tk.Toplevel()
+  finestra.title("Inserisci la tua risposta")
+  finestra.geometry("400x200")
+
+  risposta = tk.Entry(finestra,width = 40)
+  risposta.pack(pady = 20)
+
+  sB_sB = tk.Button(finestra,text = "salva la risposta",command = lambda: salvaFinestra(risposta.get(),chatBox,messaggio,finestra))
+  sB_sB.pack(pady = 10)
+
+
+def salvaFinestra(messaggio,chatBox,risposte,finestra):
+  if risposte:
+   risposteP[risposte] = messaggio
+   salvaRisposte(risposteP) 
+  
+  finestra.destroy()
+  salvaRisposta(chatBox,messaggio)
 
 def defineGUI(callBack):
     root = tk.Tk()
     root.title("<<<CHAT>>>")
     root.geometry("500x500")
-    root.resizable(False,False)
+    root.resizable(False, False)
 
-    chatBox = tk.Text(root,state = tk.DISABLED, height = 20,width = 50, wrap = tk.WORD,font = ("Arial",14),bg = "#E5DDD5",fg = "black",padx = 10,pady = 10)
-    chatBox.pack(padx = 10,pady = 10)
+    chatBox = tk.Text(root, state=tk.DISABLED, height=20, width=50, wrap=tk.WORD, font=("Arial", 14), bg="#E5DDD5", fg="black", padx=10, pady=10)
+    chatBox.pack(padx=10, pady=10)
 
-    enFrame = tk.Frame(root,bg = "#D3D3D3",bd = 0)
-    enFrame.pack(padx = 10,pady = 10)
+    enFrame = tk.Frame(root, bg="#D3D3D3", bd=0)
+    enFrame.pack(padx=10, pady=10)
 
-    en = tk.Entry(enFrame,width = 40,font = ("Arial", 14),bd = 0,relief = "flat",bg = "#D3D3D3",fg = "black")
-    en.pack(padx = 10, pady = 5)
+    ris = tk.Entry(enFrame, width=40, font=("Arial", 14), bd=0, relief="flat", bg="#D3D3D3", fg="black")
+    ris.pack(padx=10, pady=5)
+ 
 
     def message():
-        msm = en.get()  
+        msm = ris.get()
         if msm:
-            
-          chatBox.config(state = tk.NORMAL)
-          chatBox.insert(tk.END, f"Tu: {msm}\n\n")
-          chatBox.config(state = tk.DISABLED)
-          chatBox.yview(tk.END)
+            chatBox.config(state = tk.NORMAL)
+            chatBox.config(state = tk.DISABLED)
+            chatBox.yview(tk.END)
 
             
-          threading.Thread(target = callBack, args = (msm,chatBox)).start()
-          en.delete(0, tk.END)
+            threading.Thread(target=callBack, args=(msm, chatBox)).start()
+            ris.delete(0, tk.END)  
 
-    sendButton = tk.Button(root, text = "INVIA", font = ("Arial", 14), command = message, bg = "#25D366", fg = "green", relief = tk.RAISED)
+    sendButton = tk.Button(root, text="INVIA", font=("Arial", 14), command = message, bg="#25D366", fg="green", relief = tk.RAISED)
     sendButton.pack(pady=10)
 
-   
     root.mainloop()
-
-def inputUser(messaggio, chatBox):
     
-    risposta = creaRisposta(messaggio)
-
-    chatBox.config(state=tk.NORMAL)
-    chatBox.insert(tk.END, f"Utente sconosciuto: {risposta}\n\n")
-    chatBox.config(state=tk.DISABLED)
-    chatBox.yview(tk.END)
 
 
 defineGUI(inputUser)
-
